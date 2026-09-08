@@ -1,14 +1,16 @@
-import { Navbar } from './components/Navbar';
-import { Editor } from './components/Editor';
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Home } from './pages/Home';
+import { Room } from './pages/Room';
 
 function App() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', backgroundColor: '#1e1e1e', color: 'white', overflow: 'hidden' }}>
-      <Navbar />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px', overflow: 'hidden' }}>
-        <Editor />
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/room/:roomId" element={<Room />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
