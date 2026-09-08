@@ -1,12 +1,13 @@
+import { Navbar } from './components/Navbar';
 import { Editor } from './components/Editor';
 
 function App() {
   return (
-    <div style={{ backgroundColor: '#1e1e1e', minHeight: '100vh', padding: '40px', color: 'white' }}>
-      <h1>CoSync Editor</h1>
-      <p>A beautiful collaborative workspace.</p>
-      
-      <Editor />
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', backgroundColor: '#1e1e1e', color: 'white', overflow: 'hidden' }}>
+      <Navbar />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px', overflow: 'hidden' }}>
+        <Editor />
+      </div>
     </div>
   );
 }
