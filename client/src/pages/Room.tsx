@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
 import { Sidebar } from '../components/Sidebar';
@@ -20,6 +20,45 @@ export const Room = () => {
   const [activeFileId, setActiveFileId] = useState<string>('1');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
 
+  const socketRef = useRef<WebSocket | null>(null);
+
+  useEffect(() => {
+    console.log("🔄 Attempting to connect to WebSocket on port 3002...");
+    const ws = new WebSocket('ws://localhost:3002');
+    socketRef.current = ws;
+
+    ws.onopen = () => {
+      console.log("✅ WebSocket Connected! Joining room:", roomId);
+      ws.send(JSON.stringify({
+        type: 'join',
+        roomId
+      }));
+    };
+
+    ws.onerror = (error) => {
+      console.error("❌ WebSocket Error:", error);
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log("📩 Received from server:", data);
+      
+      if (data.type === 'code_change') {
+        setFiles(prev => prev.map(file => {
+          if (file.id === data.fileId) {
+            return { ...file, content: data.content };
+          }
+          return file;
+        }));
+      }
+    };
+
+    return () => {
+      console.log("🔌 Disconnecting WebSocket...");
+      ws.close();
+    };
+  }, [roomId]);
+
   const activeFile = files.find(f => f.id === activeFileId) || files[0];
 
   const handleCodeChange = (newContent: string) => {
@@ -29,6 +68,15 @@ export const Room = () => {
       }
       return file;
     }));
+
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify({
+        type: 'code_change',
+        roomId,
+        fileId: activeFileId,
+        content: newContent
+      }));
+    }
   };
 
   return (
