@@ -5,26 +5,34 @@ import { Sidebar } from '../components/Sidebar';
 import type { FileItem } from '../components/Sidebar';
 import { Editor } from '../components/Editor';
 
-const INITIAL_FILES: FileItem[] = [
-  { id: '1', name: 'main.js', language: 'javascript', content: 'console.log("Hello from main.js!");' },
-  { id: '2', name: 'script.py', language: 'python', content: 'print("Hello from script.py!")' },
-  { id: '3', name: 'index.html', language: 'html', content: '<div class="container">\n  <h1>Hello HTML</h1>\n</div>' },
-  { id: '4', name: 'styles.css', language: 'css', content: '.container {\n  color: #61afef;\n}' },
-  { id: '5', name: 'data.json', language: 'json', content: '{\n  "appName": "CoSync",\n  "status": "Active"\n}' }
-];
-
 export const Room = () => {
   const { roomId } = useParams<{ roomId: string }>();
 
-  const [files, setFiles] = useState<FileItem[]>(INITIAL_FILES);
+  const [files, setFiles] = useState<FileItem[]>([]);
   const [activeFileId, setActiveFileId] = useState<string>('1');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const socketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    console.log("🔄 Attempting to connect to WebSocket on port 3002...");
-    const ws = new WebSocket('ws://localhost:3002');
+    const fetchRoomData = async () => {
+      try {
+        const response = await fetch(`http://localhost:3003/api/room/${roomId}`);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const data = await response.json();
+        setFiles(data.files);
+      } catch (error) {
+        console.error("Failed to fetch room data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchRoomData();
+
+    console.log("🔄 Attempting to connect to WebSocket on port 3003...");
+    const ws = new WebSocket('ws://localhost:3003');
     socketRef.current = ws;
 
     ws.onopen = () => {
@@ -58,6 +66,14 @@ export const Room = () => {
       ws.close();
     };
   }, [roomId]);
+
+  if (isLoading || files.length === 0) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#1e1e1e', color: 'white' }}>
+        <h2>Loading Workspace...</h2>
+      </div>
+    );
+  }
 
   const activeFile = files.find(f => f.id === activeFileId) || files[0];
 
