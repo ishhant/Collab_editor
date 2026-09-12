@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 interface NavbarProps {
   roomName?: string;
@@ -17,7 +17,7 @@ export const Navbar: React.FC<NavbarProps> = ({ roomName = 'workspace / main.js'
     <header style={{
       display: 'flex',
       alignItems: 'center',
-      justify: 'space-between',
+      justifyContent: 'space-between',
       padding: '12px 24px',
       backgroundColor: '#181a1f',
       borderBottom: '1px solid #282c34',

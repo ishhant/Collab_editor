@@ -9,11 +9,10 @@ import { RoomModel } from './models/Room';
 const app = express();
 app.use(cors());
 
-// Connect to MongoDB
 const MONGODB_URI = process.env.MONGODB_URI || '';
 mongoose.connect(MONGODB_URI)
-  .then(() => console.log('📦 Connected to MongoDB Successfully!'))
-  .catch(err => console.error('❌ MongoDB Connection Error:', err));
+  .then(() => console.log('Connected to MongoDB Successfully!'))
+  .catch(err => console.error('MongoDB Connection Error:', err));
 
 const DEFAULT_FILES = [
   { id: '1', name: 'main.js', language: 'javascript', content: 'console.log("Hello from main.js!");' },
@@ -27,7 +26,6 @@ app.get('/', (req, res) => {
   res.send('Hello from the CoSync Backend!');
 });
 
-// API route to fetch or initialize a room
 app.get('/api/room/:roomId', async (req, res) => {
   try {
     const { roomId } = req.params;
@@ -54,7 +52,7 @@ const rooms = new Map<string, Set<WebSocket>>();
 
 wss.on('connection', (ws) => {
   let currentRoom = '';
-  console.log('✅ New client connected!');
+  console.log('New client connected');
 
   ws.on('message', async (messageAsString) => {
     const data = JSON.parse(messageAsString.toString());
@@ -65,7 +63,7 @@ wss.on('connection', (ws) => {
         rooms.set(currentRoom, new Set());
       }
       rooms.get(currentRoom)!.add(ws);
-      console.log(`👥 User joined room: ${currentRoom}. Total users in room: ${rooms.get(currentRoom)!.size}`);
+      console.log(`User joined room: ${currentRoom}. Total users in room: ${rooms.get(currentRoom)!.size}`);
     } 
     else if (data.type === 'code_change') {
       const roomClients = rooms.get(currentRoom);
@@ -81,7 +79,6 @@ wss.on('connection', (ws) => {
         });
       }
 
-      // Save the code to MongoDB permanently
       try {
         await RoomModel.updateOne(
           { roomId: currentRoom, "files.id": data.fileId },
@@ -94,7 +91,7 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
-    console.log(`❌ Client disconnected from room: ${currentRoom}`);
+    console.log(`Client disconnected from room: ${currentRoom}`);
     if (currentRoom && rooms.has(currentRoom)) {
       rooms.get(currentRoom)!.delete(ws);
       if (rooms.get(currentRoom)!.size === 0) {
@@ -106,5 +103,5 @@ wss.on('connection', (ws) => {
 
 const PORT = process.env.PORT || 3003;
 server.listen(PORT, () => {
-  console.log(`🚀 Server is listening on port ${PORT}`);
+  console.log(`Server is listening on port ${PORT}`);
 });

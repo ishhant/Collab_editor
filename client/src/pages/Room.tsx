@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
 import { Sidebar } from '../components/Sidebar';
@@ -34,12 +34,12 @@ export const Room = () => {
     
     fetchRoomData();
 
-    console.log(`🔄 Attempting to connect to WebSocket on ${WS_URL}...`);
+    console.log(`Attempting to connect to WebSocket on ${WS_URL}...`);
     const ws = new WebSocket(WS_URL);
     socketRef.current = ws;
 
     ws.onopen = () => {
-      console.log("✅ WebSocket Connected! Joining room:", roomId);
+      console.log("WebSocket Connected! Joining room:", roomId);
       ws.send(JSON.stringify({
         type: 'join',
         roomId
@@ -47,12 +47,12 @@ export const Room = () => {
     };
 
     ws.onerror = (error) => {
-      console.error("❌ WebSocket Error:", error);
+      console.error("WebSocket Error:", error);
     };
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log("📩 Received from server:", data);
+      console.log("Received from server:", data);
       
       if (data.type === 'code_change') {
         setFiles(prev => prev.map(file => {
@@ -65,7 +65,7 @@ export const Room = () => {
     };
 
     return () => {
-      console.log("🔌 Disconnecting WebSocket...");
+      console.log("Disconnecting WebSocket...");
       ws.close();
     };
   }, [roomId]);

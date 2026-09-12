@@ -1,5 +1,3 @@
-import React from 'react';
-
 export interface FileItem {
   id: string;
   name: string;
@@ -15,13 +13,13 @@ interface SidebarProps {
   onToggle: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({
+export const Sidebar = ({
   files,
   activeFileId,
   onSelectFile,
   isOpen,
   onToggle
-}) => {
+}: SidebarProps) => {
   const getFileBadgeColor = (lang: string) => {
     switch (lang) {
       case 'javascript': return '#f7df1e';
@@ -73,7 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        justify: 'space-between',
+        justifyContent: 'space-between',
         padding: '10px 16px',
         borderBottom: '1px solid #282c34',
         color: '#5c6370',
