@@ -19,9 +19,11 @@ export const Room = () => {
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3003';
     const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3003';
 
+    const cleanApiUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
+
     const fetchRoomData = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/room/${roomId}`);
+        const response = await fetch(`${cleanApiUrl}/api/room/${roomId}`);
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
         setFiles(data.files);
