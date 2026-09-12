@@ -16,9 +16,12 @@ export const Room = () => {
   const socketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3003';
+    const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3003';
+
     const fetchRoomData = async () => {
       try {
-        const response = await fetch(`http://localhost:3003/api/room/${roomId}`);
+        const response = await fetch(`${API_URL}/api/room/${roomId}`);
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
         setFiles(data.files);
@@ -31,8 +34,8 @@ export const Room = () => {
     
     fetchRoomData();
 
-    console.log("🔄 Attempting to connect to WebSocket on port 3003...");
-    const ws = new WebSocket('ws://localhost:3003');
+    console.log(`🔄 Attempting to connect to WebSocket on ${WS_URL}...`);
+    const ws = new WebSocket(WS_URL);
     socketRef.current = ws;
 
     ws.onopen = () => {
