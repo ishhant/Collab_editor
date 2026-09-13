@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import type { ActiveUser } from '../pages/Room';
 
 interface NavbarProps {
   roomName?: string;
+  activeUsers?: ActiveUser[];
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ roomName = 'workspace / main.js' }) => {
+export const Navbar = ({ roomName = 'workspace / main.js', activeUsers = [] }: NavbarProps) => {
   const [copied, setCopied] = useState(false);
 
   const handleShare = () => {
@@ -48,53 +50,30 @@ export const Navbar: React.FC<NavbarProps> = ({ roomName = 'workspace / main.js'
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div style={{
-            width: '30px',
-            height: '30px',
-            borderRadius: '50%',
-            backgroundColor: '#e06c75',
-            color: '#ffffff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '11px',
-            fontWeight: 700,
-            border: '2px solid #181a1f'
-          }}>
-            YOU
-          </div>
-          <div style={{
-            width: '30px',
-            height: '30px',
-            borderRadius: '50%',
-            backgroundColor: '#98c379',
-            color: '#1e2227',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '11px',
-            fontWeight: 700,
-            border: '2px solid #181a1f',
-            marginLeft: '-8px'
-          }}>
-            SK
-          </div>
-          <div style={{
-            width: '30px',
-            height: '30px',
-            borderRadius: '50%',
-            backgroundColor: '#d19a66',
-            color: '#1e2227',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '11px',
-            fontWeight: 700,
-            border: '2px solid #181a1f',
-            marginLeft: '-8px'
-          }}>
-            +1
-          </div>
+          {activeUsers.map((user, index) => (
+            <div 
+              key={user.id}
+              title={user.name}
+              style={{
+                width: '30px',
+                height: '30px',
+                borderRadius: '50%',
+                backgroundColor: user.color,
+                color: '#1e2227',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '12px',
+                fontWeight: 700,
+                border: '2px solid #181a1f',
+                marginLeft: index > 0 ? '-8px' : '0',
+                zIndex: activeUsers.length - index,
+                textTransform: 'uppercase'
+              }}
+            >
+              {user.name.substring(0, 2)}
+            </div>
+          ))}
         </div>
 
         <button

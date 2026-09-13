@@ -1,51 +1,56 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 
 export const Home = () => {
   const navigate = useNavigate();
+  const [userName, setUserName] = useState('');
 
-  const handleCreateRoom = () => {
-    // Generate a unique random room ID (e.g. "a1b2c3d4...")
-    const newRoomId = uuidv4();
+  useEffect(() => {
+    const savedName = localStorage.getItem('userName');
+    if (savedName) {
+      setUserName(savedName);
+    }
+  }, []);
+
+  const createRoom = () => {
+    if (!userName.trim()) {
+      alert("Please enter your name first!");
+      return;
+    }
     
-    // Redirect the user to the new room URL
-    navigate(`/room/${newRoomId}`);
+    localStorage.setItem('userName', userName.trim());
+    const roomId = uuidv4();
+    navigate(`/room/${roomId}`);
   };
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '100vh',
-      width: '100vw',
-      backgroundColor: '#1e1e1e',
-      color: '#ffffff',
-      fontFamily: 'system-ui, sans-serif'
-    }}>
-      <h1 style={{ fontSize: '48px', margin: '0 0 16px', color: '#61afef' }}>
-        CoSync
-      </h1>
-      <p style={{ fontSize: '18px', color: '#abb2bf', margin: '0 0 32px' }}>
-        Real-time collaborative code editor.
-      </p>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#1e1e1e', color: 'white' }}>
+      <h1 style={{ fontSize: '3rem', marginBottom: '1rem', color: '#61afef' }}>CoSync</h1>
+      <p style={{ fontSize: '1.2rem', marginBottom: '2rem', color: '#abb2bf' }}>Real-time collaborative code editor</p>
       
-      <button
-        onClick={handleCreateRoom}
+      <input
+        type="text"
+        placeholder="Enter your name..."
+        value={userName}
+        onChange={(e) => setUserName(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && createRoom()}
         style={{
-          backgroundColor: '#98c379',
-          color: '#1e1e1e',
+          padding: '12px 20px',
           fontSize: '16px',
-          fontWeight: 700,
-          border: 'none',
           borderRadius: '8px',
-          padding: '12px 24px',
-          cursor: 'pointer',
-          transition: 'transform 0.1s'
+          border: '1px solid #3e4451',
+          backgroundColor: '#282c34',
+          color: 'white',
+          marginBottom: '20px',
+          width: '250px',
+          outline: 'none'
         }}
-        onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(1.1)'}
-        onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1)'}
+      />
+
+      <button 
+        onClick={createRoom}
+        style={{ padding: '12px 24px', fontSize: '1.1rem', backgroundColor: '#98c379', color: '#1e1e1e', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
       >
         Create New Workspace
       </button>

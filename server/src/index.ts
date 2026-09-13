@@ -45,10 +45,39 @@ app.get('/api/room/:roomId', async (req, res) => {
   }
 });
 
+import crypto from 'crypto';
+
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
-const rooms = new Map<string, Set<WebSocket>>();
+interface UserData {
+  id: string;
+  name: string;
+  color: string;
+}
+
+const rooms = new Map<string, Map<WebSocket, UserData>>();
+
+const getRandomColor = () => {
+  const colors = ['#e06c75', '#98c379', '#d19a66', '#61afef', '#c678dd', '#56b6c2'];
+  return colors[Math.floor(Math.random() * colors.length)];
+};
+
+const broadcastRoomUsers = (roomId: string) => {
+  const roomClients = rooms.get(roomId);
+  if (!roomClients) return;
+
+  const users = Array.from(roomClients.values());
+  
+  roomClients.forEach((userData, client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify({
+        type: 'room_users',
+        users
+      }));
+    }
+  });
+};
 
 wss.on('connection', (ws) => {
   let currentRoom = '';
@@ -59,16 +88,27 @@ wss.on('connection', (ws) => {
 
     if (data.type === 'join') {
       currentRoom = data.roomId;
+      const userName = data.userName || 'Anonymous';
+      
       if (!rooms.has(currentRoom)) {
-        rooms.set(currentRoom, new Set());
+        rooms.set(currentRoom, new Map());
       }
-      rooms.get(currentRoom)!.add(ws);
-      console.log(`User joined room: ${currentRoom}. Total users in room: ${rooms.get(currentRoom)!.size}`);
+      
+      const userData = {
+        id: crypto.randomUUID(),
+        name: userName,
+        color: getRandomColor()
+      };
+      
+      rooms.get(currentRoom)!.set(ws, userData);
+      console.log(`User ${userName} joined room: ${currentRoom}. Total users: ${rooms.get(currentRoom)!.size}`);
+      
+      broadcastRoomUsers(currentRoom);
     } 
     else if (data.type === 'code_change') {
       const roomClients = rooms.get(currentRoom);
       if (roomClients) {
-        roomClients.forEach((client) => {
+        roomClients.forEach((userData, client) => {
           if (client !== ws && client.readyState === WebSocket.OPEN) {
             client.send(JSON.stringify({
               type: 'code_change',
@@ -91,11 +131,17 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
-    console.log(`Client disconnected from room: ${currentRoom}`);
     if (currentRoom && rooms.has(currentRoom)) {
-      rooms.get(currentRoom)!.delete(ws);
-      if (rooms.get(currentRoom)!.size === 0) {
+      const roomClients = rooms.get(currentRoom)!;
+      const userData = roomClients.get(ws);
+      console.log(`Client ${userData?.name} disconnected from room: ${currentRoom}`);
+      
+      roomClients.delete(ws);
+      
+      if (roomClients.size === 0) {
         rooms.delete(currentRoom);
+      } else {
+        broadcastRoomUsers(currentRoom);
       }
     }
   });

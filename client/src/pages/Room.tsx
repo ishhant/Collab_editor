@@ -5,6 +5,12 @@ import { Sidebar } from '../components/Sidebar';
 import type { FileItem } from '../components/Sidebar';
 import { Editor } from '../components/Editor';
 
+export interface ActiveUser {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export const Room = () => {
   const { roomId } = useParams<{ roomId: string }>();
 
@@ -12,10 +18,37 @@ export const Room = () => {
   const [activeFileId, setActiveFileId] = useState<string>('1');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  
+  const [userName, setUserName] = useState<string>('');
+  const [showNamePrompt, setShowNamePrompt] = useState<boolean>(false);
+  const [tempName, setTempName] = useState<string>('');
+  
+  const [activeUsers, setActiveUsers] = useState<ActiveUser[]>([]);
 
   const socketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
+    const savedName = localStorage.getItem('userName');
+    if (savedName) {
+      setUserName(savedName);
+    } else {
+      setShowNamePrompt(true);
+      setIsLoading(false);
+    }
+  }, []);
+
+  const handleNameSubmit = () => {
+    if (tempName.trim()) {
+      localStorage.setItem('userName', tempName.trim());
+      setUserName(tempName.trim());
+      setShowNamePrompt(false);
+      setIsLoading(true);
+    }
+  };
+
+  useEffect(() => {
+    if (!userName) return;
+
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3003';
     const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3003';
 
@@ -44,7 +77,8 @@ export const Room = () => {
       console.log("WebSocket Connected! Joining room:", roomId);
       ws.send(JSON.stringify({
         type: 'join',
-        roomId
+        roomId,
+        userName
       }));
     };
 
@@ -63,6 +97,8 @@ export const Room = () => {
           }
           return file;
         }));
+      } else if (data.type === 'room_users') {
+        setActiveUsers(data.users);
       }
     };
 
@@ -70,7 +106,39 @@ export const Room = () => {
       console.log("Disconnecting WebSocket...");
       ws.close();
     };
-  }, [roomId]);
+  }, [roomId, userName]);
+
+  if (showNamePrompt) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#1e1e1e', color: 'white' }}>
+        <h2 style={{ marginBottom: '20px', color: '#61afef' }}>Join Workspace</h2>
+        <input
+          type="text"
+          placeholder="Enter your name..."
+          value={tempName}
+          onChange={(e) => setTempName(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleNameSubmit()}
+          style={{
+            padding: '12px 20px',
+            fontSize: '16px',
+            borderRadius: '8px',
+            border: '1px solid #3e4451',
+            backgroundColor: '#282c34',
+            color: 'white',
+            marginBottom: '20px',
+            width: '250px',
+            outline: 'none'
+          }}
+        />
+        <button 
+          onClick={handleNameSubmit}
+          style={{ padding: '10px 24px', fontSize: '1rem', backgroundColor: '#98c379', color: '#1e1e1e', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+        >
+          Join Room
+        </button>
+      </div>
+    );
+  }
 
   if (isLoading || files.length === 0) {
     return (
@@ -102,7 +170,7 @@ export const Room = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', backgroundColor: '#1e1e1e', color: 'white', overflow: 'hidden' }}>
-      <Navbar roomName={`${roomId} / ${activeFile.name}`} />
+      <Navbar roomName={`${roomId} / ${activeFile.name}`} activeUsers={activeUsers} />
       
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         <Sidebar
